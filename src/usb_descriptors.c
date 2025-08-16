@@ -46,8 +46,8 @@ tusb_desc_device_t const desc_device =
     .bDeviceProtocol    = 0x00,
     .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE,
 
-    .idVendor           = 0x2E8A, // Pi
-    .idProduct          = 0x000c, // CMSIS-DAP Debug Probe
+    .idVendor           = 0x20A0, // Pi
+    .idProduct          = 0x42FD, // CMSIS-DAP Debug Probe
     .bcdDevice          = 0x0223, // Version 02.23
     .iManufacturer      = 0x01,
     .iProduct           = 0x02,
@@ -134,7 +134,7 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 char const* string_desc_arr [] =
 {
   (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
-  "Raspberry Pi", // 1: Manufacturer
+  "Emils", // 1: Manufacturer
   PROBE_PRODUCT_STRING, // 2: Product
   usb_serial,     // 3: Serial, uses flash unique ID
   "CMSIS-DAP v1 Interface", // 4: Interface descriptor for HID transport
