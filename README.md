@@ -1,3 +1,27 @@
+# Debugprobe (daplink_pi)
+
+このリポジトリは [Raspberry Pi Debug Probe](https://github.com/raspberrypi/debugprobe) のファームウェアをベースに、カスタマイズを加えたものです。
+
+## フォーク元からの主なカスタム内容
+- レベルシフタ対応のためにENの極性反転
+- ピンアサイン変更
+- ボード名とVID PIDの変更
+詳細な変更点は各ソースファイルのコメントやコミット履歴をご参照ください。
+
+## ライセンスについて
+本リポジトリは、フォーク元のライセンス（Apache License 2.0）に準拠しつつ、追加・変更部分についても同ライールで公開しています。
+
+- オリジナル: Copyright (c) Raspberry Pi Ltd. および各著作権者
+- カスタム部分: Copyright (c) sagasa
+
+## クレジット
+- オリジナル作者: Raspberry Pi Ltd.
+- カスタム・パッチ作者: sagasa
+
+---
+
+以下はオリジナルREADMEの内容です
+
 # Debugprobe
 
 Firmware source for the Raspberry Pi Debug Probe SWD/UART accessory. Can also be run on a Raspberry Pi Pico.
