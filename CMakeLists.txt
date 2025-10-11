@@ -5,6 +5,11 @@ include(pico_sdk_import.cmake)
 set(FREERTOS_KERNEL_PATH ${CMAKE_CURRENT_LIST_DIR}/freertos)
 include(FreeRTOS_Kernel_import.cmake)
 
+set(PICO_DEFAULT_BOOT_STAGE2_FILE
+    ${PICO_SDK_PATH}/src/rp2040/boot_stage2/boot2_generic_03h.S)
+add_compile_definitions(PICO_FLASH_SIZE_BYTES=524288)
+add_compile_definitions(FLASH_SECTOR_SIZE=4096)
+
 project(debugprobe)
 
 pico_sdk_init()
@@ -75,6 +80,7 @@ target_link_libraries(debugprobe PRIVATE
         tinyusb_device
         tinyusb_board
         hardware_pio
+        hardware_adc
         FreeRTOS-Kernel
         FreeRTOS-Kernel-Heap1
 )
