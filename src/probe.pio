@@ -90,8 +90,9 @@ static inline void probe_gpio_init()
 static inline void probe_gpio_deinit()
 {
 #if defined(PROBE_PIN_RESET)
-	gpio_deinit(PROBE_PIN_RESET);
-	gpio_disable_pulls(PROBE_PIN_RESET);
+	// Keep RESET pin with pull-up, don't deinit to maintain permanent pull-up
+	// gpio_deinit(PROBE_PIN_RESET);
+	// gpio_disable_pulls(PROBE_PIN_RESET);
 #endif
 	gpio_deinit(PROBE_PIN_SWCLK);
 	gpio_disable_pulls(PROBE_PIN_SWCLK);

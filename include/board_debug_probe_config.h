@@ -29,7 +29,7 @@
 #define PROBE_IO_OEN
 #define PROBE_CDC_UART
 // reset pin 
-#define PROBE_PIN_RESET 1
+#define PROBE_PIN_RESET 17
 
 // PIO config
 #define PROBE_SM 0

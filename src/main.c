@@ -125,6 +125,11 @@ int main(void) {
     // Declare pins in binary information
     bi_decl_config();
 
+    // Initialize nRESET pin with pull-up for permanent operation
+    gpio_init(17);
+    gpio_set_dir(17, GPIO_IN);
+    gpio_pull_up(17);
+
     board_init();
     usb_serial_init();
     cdc_uart_init();
@@ -144,6 +149,9 @@ int main(void) {
     }
 
     while (!THREADED) {
+        // Force GPIO17 high repeatedly to override any other settings
+        gpio_put(17, 1);
+        
         tud_task();
         cdc_task();
 

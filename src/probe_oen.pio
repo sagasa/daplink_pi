@@ -50,7 +50,7 @@ static inline void probe_gpio_init()
 #if defined(PROBE_PIN_RESET)
     // Target reset pin: pull up, input to emulate open drain pin
     gpio_pull_up(PROBE_PIN_RESET);
-    // gpio_init will leave the pin cleared and set as input
+    gpio_set_dir(PROBE_PIN_RESET, GPIO_IN);
     gpio_init(PROBE_PIN_RESET);
 #endif
     // Funcsel pins
@@ -67,8 +67,9 @@ static inline void probe_gpio_init()
 static inline void probe_gpio_deinit()
 {
 #if defined(PROBE_PIN_RESET)
-	gpio_deinit(PROBE_PIN_RESET);
-	gpio_disable_pulls(PROBE_PIN_RESET);
+	// Keep RESET pin with pull-up, don't deinit to maintain permanent pull-up
+	// gpio_deinit(PROBE_PIN_RESET);
+	// gpio_disable_pulls(PROBE_PIN_RESET);
 #endif
 	gpio_deinit(PROBE_PIN_SWCLK);
 	gpio_disable_pulls(PROBE_PIN_SWCLK);
