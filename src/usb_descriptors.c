@@ -69,21 +69,29 @@ uint8_t const * tud_descriptor_device_cb(void)
 enum
 {
   ITF_NUM_PROBE, // Old versions of Keil MDK only look at interface 0
-  ITF_NUM_CDC_COM,
-  ITF_NUM_CDC_DATA,
+  ITF_NUM_CDC0_COM,
+  ITF_NUM_CDC0_DATA,
+  ITF_NUM_CDC1_COM,
+  ITF_NUM_CDC1_DATA,
   ITF_NUM_TOTAL
 };
 
-#define CDC_NOTIFICATION_EP_NUM 0x81
-#define CDC_DATA_OUT_EP_NUM 0x02
-#define CDC_DATA_IN_EP_NUM 0x83
+// CDC #0 endpoints
+#define CDC0_NOTIFICATION_EP_NUM 0x81
+#define CDC0_DATA_OUT_EP_NUM     0x02
+#define CDC0_DATA_IN_EP_NUM      0x83
+// CDC #1 endpoints (use next available IN/OUT numbers)
+#define CDC1_NOTIFICATION_EP_NUM 0x86
+#define CDC1_DATA_OUT_EP_NUM     0x06
+#define CDC1_DATA_IN_EP_NUM      0x87
+// CMSIS-DAP endpoints
 #define DAP_OUT_EP_NUM 0x04
-#define DAP_IN_EP_NUM 0x85
+#define DAP_IN_EP_NUM  0x85
 
 #if (PROBE_DEBUG_PROTOCOL == PROTO_DAP_V1)
-#define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_HID_INOUT_DESC_LEN)
+#define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + (2*TUD_CDC_DESC_LEN) + TUD_HID_INOUT_DESC_LEN)
 #else
-#define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_VENDOR_DESC_LEN)
+#define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + (2*TUD_CDC_DESC_LEN) + TUD_VENDOR_DESC_LEN)
 #endif
 
 static uint8_t const desc_hid_report[] =
@@ -111,8 +119,10 @@ uint8_t desc_configuration[] =
   // Bulk
   TUD_VENDOR_DESCRIPTOR(ITF_NUM_PROBE, 0, DAP_OUT_EP_NUM, DAP_IN_EP_NUM, 64),
 #endif
-  // Interface 1 + 2
-  TUD_CDC_DESCRIPTOR(ITF_NUM_CDC_COM, 6, CDC_NOTIFICATION_EP_NUM, 64, CDC_DATA_OUT_EP_NUM, CDC_DATA_IN_EP_NUM, 64),
+  // Interface 1 + 2 : CDC-ACM #0
+  TUD_CDC_DESCRIPTOR(ITF_NUM_CDC0_COM, 6, CDC0_NOTIFICATION_EP_NUM, 64, CDC0_DATA_OUT_EP_NUM, CDC0_DATA_IN_EP_NUM, 64),
+  // Interface 3 + 4 : CDC-ACM #1
+  TUD_CDC_DESCRIPTOR(ITF_NUM_CDC1_COM, 7, CDC1_NOTIFICATION_EP_NUM, 64, CDC1_DATA_OUT_EP_NUM, CDC1_DATA_IN_EP_NUM, 64),
 };
 
 // Invoked when received GET CONFIGURATION DESCRIPTOR
@@ -121,8 +131,18 @@ uint8_t desc_configuration[] =
 uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 {
   (void) index; // for multiple configurations
-  /* Hack in CAP_BREAK support */
-  desc_configuration[CONFIG_TOTAL_LEN - TUD_CDC_DESC_LEN + 8 + 9 + 5 + 5 + 4 - 1] = 0x6;
+  /* Hack in CAP_BREAK support for both CDC interfaces */
+  // CDC #0
+  desc_configuration[TUD_CONFIG_DESC_LEN
+                     + 8 /* CDC header */
+                     + 9 /* ACM */
+                     + 5 /* union */
+                     + 5 /* call mgmt */
+                     + 4 /* notification ep */
+                     - 1] = 0x6;
+  // CDC #1: offset past first CDC block
+  desc_configuration[TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN
+                     + 8 + 9 + 5 + 5 + 4 - 1] = 0x6;
   return desc_configuration;
 }
 
@@ -139,7 +159,8 @@ char const* string_desc_arr [] =
   usb_serial,     // 3: Serial, uses flash unique ID
   "CMSIS-DAP v1 Interface", // 4: Interface descriptor for HID transport
   "CMSIS-DAP v2 Interface", // 5: Interface descriptor for Bulk transport
-  "CDC-ACM UART Interface", // 6: Interface descriptor for CDC
+  "CDC-ACM UART Interface",      // 6: Interface descriptor for CDC #0
+  "CDC-ACM UART Interface #2",   // 7: Interface descriptor for CDC #1
 };
 
 static uint16_t _desc_str[32];

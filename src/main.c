@@ -59,6 +59,7 @@ static uint8_t RxDataBuffer[CFG_TUD_HID_EP_BUFSIZE];
 #define DAP_TASK_PRIO  (tskIDLE_PRIORITY + 1)
 
 TaskHandle_t dap_taskhandle, tud_taskhandle, mon_taskhandle;
+static TaskHandle_t tsel_taskhandle;
 
 static int was_configured;
 
@@ -116,6 +117,54 @@ void usb_thread(void *ptr)
     } while (1);
 }
 
+// Target select: reads GPIO27 (active low) and drives GPIO29 LED
+static void target_select_thread(void *ptr)
+{
+#ifdef PROBE_TARGET_SELECT_PIN
+  gpio_init(PROBE_TARGET_SELECT_PIN);
+  gpio_set_dir(PROBE_TARGET_SELECT_PIN, GPIO_IN);
+  gpio_pull_up(PROBE_TARGET_SELECT_PIN);
+#endif
+#ifdef PROBE_TARGET_STATUS_LED
+  gpio_init(PROBE_TARGET_STATUS_LED);
+  gpio_set_dir(PROBE_TARGET_STATUS_LED, GPIO_OUT);
+  gpio_put(PROBE_TARGET_STATUS_LED, 0);
+#endif
+#ifdef PROBE_TARGET_TEST_LED
+  // Force test LED (GPIO29) HIGH to verify hardware wiring
+  gpio_init(PROBE_TARGET_TEST_LED);
+  gpio_set_dir(PROBE_TARGET_TEST_LED, GPIO_OUT);
+  gpio_put(PROBE_TARGET_TEST_LED, 1);
+#endif
+
+#ifdef PROBE_ANALOG_SW_SHDN
+  // Keep analog switch enabled: shutdown is active low
+  gpio_init(PROBE_ANALOG_SW_SHDN);
+  gpio_set_dir(PROBE_ANALOG_SW_SHDN, GPIO_OUT);
+  gpio_put(PROBE_ANALOG_SW_SHDN, 0);
+#endif
+#ifdef PROBE_ANALOG_SW_SEL
+  gpio_init(PROBE_ANALOG_SW_SEL);
+  gpio_set_dir(PROBE_ANALOG_SW_SEL, GPIO_OUT);
+  gpio_put(PROBE_ANALOG_SW_SEL, 0);
+#endif
+
+  TickType_t wake = xTaskGetTickCount();
+  while (1) {
+#if defined(PROBE_TARGET_SELECT_PIN) && defined(PROBE_TARGET_STATUS_LED)
+  // Inverted polarity: LED should light when Main is selected, but
+  // hardware reads High for Main (temporary board wiring).
+  bool main_selected = (gpio_get(PROBE_TARGET_SELECT_PIN) != 0);
+    gpio_put(PROBE_TARGET_STATUS_LED, main_selected ? 1 : 0);
+#ifdef PROBE_ANALOG_SW_SEL
+  // Drive analog switch select with inverted polarity to status LED
+  gpio_put(PROBE_ANALOG_SW_SEL, main_selected ? 0 : 1);
+#endif
+#endif
+    xTaskDelayUntil(&wake, pdMS_TO_TICKS(50));
+  }
+}
+
 // Workaround API change in 0.13
 #if (TUSB_VERSION_MAJOR == 0) && (TUSB_VERSION_MINOR <= 12)
 #define tud_vendor_flush(x) ((void)0)
@@ -125,10 +174,10 @@ int main(void) {
     // Declare pins in binary information
     bi_decl_config();
 
-    // Initialize nRESET pin with pull-up for permanent operation
-    gpio_init(17);
-    gpio_set_dir(17, GPIO_IN);
-    gpio_pull_up(17);
+    // Initialize nRESET pin with pull-up for permanent operation (GPIO10)
+    gpio_init(PROBE_PIN_RESET);
+    gpio_set_dir(PROBE_PIN_RESET, GPIO_IN);
+    gpio_pull_up(PROBE_PIN_RESET);
 
     board_init();
     usb_serial_init();
@@ -145,12 +194,13 @@ int main(void) {
 #if PICO_RP2040
         xTaskCreate(dev_mon, "WDOG", configMINIMAL_STACK_SIZE, NULL, TUD_TASK_PRIO, &mon_taskhandle);
 #endif
+      xTaskCreate(target_select_thread, "TSEL", configMINIMAL_STACK_SIZE, NULL, DAP_TASK_PRIO, &tsel_taskhandle);
         vTaskStartScheduler();
     }
 
     while (!THREADED) {
-        // Force GPIO17 high repeatedly to override any other settings
-        gpio_put(17, 1);
+        // Force reset pin high repeatedly to override any other settings
+        gpio_put(PROBE_PIN_RESET, 1);
         
         tud_task();
         cdc_task();
@@ -269,6 +319,8 @@ void tud_mount_cb(void)
     xTaskCreate(cdc_thread, "UART", configMINIMAL_STACK_SIZE, NULL, UART_TASK_PRIO, &uart_taskhandle);
     /* Lowest priority thread is debug - need to shuffle buffers before we can toggle swd... */
     xTaskCreate(dap_thread, "DAP", configMINIMAL_STACK_SIZE, NULL, DAP_TASK_PRIO, &dap_taskhandle);
+    /* Start decoupled DTR pulse task for Arduino-style autoreset */
+    cdc_start_dtr_pulse_task();
     was_configured = 1;
   }
 }

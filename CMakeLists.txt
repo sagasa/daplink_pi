@@ -8,6 +8,9 @@ include(FreeRTOS_Kernel_import.cmake)
 set(PICO_DEFAULT_BOOT_STAGE2_FILE
     ${PICO_SDK_PATH}/src/rp2040/boot_stage2/boot2_generic_03h.S)
 add_compile_definitions(PICO_FLASH_SIZE_BYTES=524288)
+# AT25SF041B対策: AT25SF系のQE設定に対応するboot2を使用
+set(PICO_DEFAULT_BOOT_STAGE2_FILE
+    ${PICO_SDK_PATH}/src/rp2040/boot_stage2/boot2_at25sf128a.S)
 add_compile_definitions(FLASH_SECTOR_SIZE=4096)
 
 project(debugprobe)

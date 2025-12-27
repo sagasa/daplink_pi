@@ -82,6 +82,9 @@ static inline void probe_gpio_init()
     // Funcsel pins
     pio_gpio_init(pio0, PROBE_PIN_SWCLK);
     pio_gpio_init(pio0, PROBE_PIN_SWDIO);
+#ifdef PROBE_IO_SWDI
+    pio_gpio_init(pio0, PROBE_PIN_SWDI);
+#endif
     // Make sure SWDIO has a pullup on it. Idle state is high
     gpio_pull_up(PROBE_PIN_SWDIO);
 }
@@ -98,6 +101,10 @@ static inline void probe_gpio_deinit()
 	gpio_disable_pulls(PROBE_PIN_SWCLK);
 	gpio_deinit(PROBE_PIN_SWDIO);
 	gpio_disable_pulls(PROBE_PIN_SWDIO);
+#ifdef PROBE_IO_SWDI
+    gpio_deinit(PROBE_PIN_SWDI);
+    gpio_disable_pulls(PROBE_PIN_SWDI);
+#endif
 }
 
 static inline void probe_sm_init(pio_sm_config* sm_config) {
@@ -115,8 +122,12 @@ static inline void probe_sm_init(pio_sm_config* sm_config) {
 #endif
 
 
-    // Set SWD and SWDIO pins as output to start. This will be set in the sm
-    pio_sm_set_consecutive_pindirs(pio0, PROBE_SM, PROBE_PIN_OFFSET, 2, true);
+    // Set pin directions explicitly: SWDI as input, SWDIO and SWCLK as outputs
+#ifdef PROBE_IO_SWDI
+    pio_sm_set_consecutive_pindirs(pio0, PROBE_SM, PROBE_PIN_SWDI, 1, false);
+#endif
+    pio_sm_set_consecutive_pindirs(pio0, PROBE_SM, PROBE_PIN_SWDIO, 1, true);
+    pio_sm_set_consecutive_pindirs(pio0, PROBE_SM, PROBE_PIN_SWCLK, 1, true);
 
     // shift output right, autopull off, autopull threshold
     sm_config_set_out_shift(sm_config, true, false, 0);

@@ -45,4 +45,20 @@ void bi_decl_config()
     bi_decl(bi_1pin_with_name(PROBE_UART_DTR, "PROBE UART DTR"));
 #endif
 
+#ifdef PROBE_TARGET_SELECT_PIN
+    bi_decl(bi_1pin_with_name(PROBE_TARGET_SELECT_PIN, "TARGET SELECT"));
+#endif
+#ifdef PROBE_TARGET_STATUS_LED
+    bi_decl(bi_1pin_with_name(PROBE_TARGET_STATUS_LED, "TARGET STATUS LED"));
+#endif
+#ifdef PROBE_TARGET_TEST_LED
+    bi_decl(bi_1pin_with_name(PROBE_TARGET_TEST_LED, "TARGET TEST LED"));
+#endif
+
+#ifdef PROBE_ANALOG_SW_SHDN
+    bi_decl(bi_1pin_with_name(PROBE_ANALOG_SW_SHDN, "ANALOG SWITCH SHUTDOWN"));
+#endif
+#ifdef PROBE_ANALOG_SW_SEL
+    bi_decl(bi_1pin_with_name(PROBE_ANALOG_SW_SEL, "ANALOG SWITCH SELECT"));
+#endif
 }
