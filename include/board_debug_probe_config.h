@@ -60,7 +60,8 @@
 
 // LEDs for second UART bridge (avoid conflicts)
 // SUB_TX_LED omitted to free GPIO7 for analog switch select
-#define PROBE_UART2_RX_LED 23   // SUB_RX_LED GPIO23
+#define PROBE_UART2_TX_LED 3   // SUB_TX_LED GPIO3
+#define PROBE_UART2_RX_LED 4   // SUB_RX_LED GPIO4
 
 #define PROBE_PRODUCT_STRING "Debug Probe FS (CMSIS-DAP)"
 
@@ -68,12 +69,12 @@
 // GPIO27: slide switch to GND when Main selected (active low)
 // GPIO3 : status LED (on when Main selected)
 #define PROBE_TARGET_SELECT_PIN 27
-#define PROBE_TARGET_STATUS_LED 3
+#define PROBE_TARGET_STATUS_LED 26
 // Keep a temporary test LED within unused 16-25 range
 #define PROBE_TARGET_TEST_LED 24
 
 // Main UART DTR output (active low for Arduino auto-reset)
-#define PROBE_UART_DTR 4
+#define PROBE_UART_DTR 23
 
 // Treat this CDC interface index as "Main" (0 or 1)
 // In your current enumeration, Sub appears as index 0, so set to 1.
